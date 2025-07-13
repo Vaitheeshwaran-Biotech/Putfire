@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4a7c4a">
+    <title>Cattle Management</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="icons/icon-192.png">
+</head>
+<body>
+    <div class="loader" id="loader"></div>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    <button class="toggle" onclick="toggleView()">📱 Mobile View</button>
+    <div class="offline-status offline" id="offlineStatus">Offline</div>
+    <div class="c" id="container">
+        <div class="h">
+            <h1>🐄 <span id="appTitle">Cattle Management</span></h1>
+            <p id="appSubtitle">Data Input & Visual Reports</p>
+            <div class="s">
+                <div class="d"></div>
+                <span id="st">Auto-save</span>
+            </div>
+            <select class="lang-select" id="language" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+            </select>
+        </div>
+        <!-- Rest of the HTML remains identical to the previous version -->
+        <div class="card">
+            <h3><span id="dataManagementTitle">Data Management</span></h3>
+            <div class="bs">
+                <div class="bi">
+                    <span><span id="lastSavedLabel">Last:</span> <span id="ls">Never</span></span>
+                    <span><span id="recordsLabel">Records:</span> <span id="rc">0</span></span>
+                </div>
+                <button class="btn b2" onclick="backup()"><span id="backupButton">Backup</span></button>
+                <input type="file" accept=".json" onchange="restore(this)" style="margin:5px 0">
+                <button class="btn b4" onclick="clear()"><span id="clearButton">Clear</span></button>
+            </div>
+        </div>
+        <div class="card">
+            <h3><span id="settingsTitle">Settings</span></h3>
+            <div class="r">
+                <div>
+                    <label><span id="milkPriceLabel">Milk Price (₹/L):</span></label>
+                    <input type="number" id="price" step="0.01" placeholder="Price" required>
+                    <div class="error-text" id="price-error"><span id="priceError">Please enter a valid price</span></div>
+                </div>
+                <div>
+                    <label><span id="feedCostLabel">Weekly Feed Cost (₹):</span></label>
+                    <input type="number" id="cost" step="0.01" placeholder="Cost" required>
+                    <div class="error-text" id="cost-error"><span id="costError">Please enter a valid cost</span></div>
+                </div>
+            </div>
+            <button class="btn" onclick="saveSettings()"><span id="saveSettingsButton">Save Settings</span></button>
+        </div>
+        <div class="card">
+            <h3><span id="dailyProductionTitle">Daily Production</span></h3>
+            <div class="r">
+                <div>
+                    <label><span id="dateLabel">Date:</span></label>
+                    <input type="date" id="date" required>
+                    <div class="error-text" id="date-error"><span id="dateError">Please select a date</span></div>
+                </div>
+                <div>
+                    <label><span id="morningLabel">Morning (L):</span></label>
+                    <input type="number" id="morning" step="0.1" placeholder="Morning" min="0">
+                    <div class="error-text" id="morning-error"><span id="morningError">Please enter a valid quantity</span></div>
+                </div>
+                <div>
+                    <label><span id="eveningLabel">Evening (L):</span></label>
+                    <input type="number" id="evening" step="0.1" placeholder="Evening" min="0">
+                    <div class="error-text" id="evening-error"><span id="eveningError">Please enter a valid quantity</span></div>
+                </div>
+            </div>
+            <div class="health-input">
+                <label><span id="healthLabel">Health Notes:</span></label>
+                <input type="text" id="health" placeholder="e.g., Vaccinated, Healthy">
+            </div>
+            <button class="btn voice-btn" onclick="startVoiceInput()"><span id="voiceButton">Voice Input</span></button>
+            <button class="btn" onclick="addRecord()"><span id="addRecordButton">Add Record</span></button>
+            <button class="btn" onclick="generateReport()"><span id="reportButton">Report</span></button>
+            <button class="btn b2" onclick="multiReport()"><span id="multiReportButton">Multi-Report</span></button>
+        </div>
+        <div id="report" class="card" style="display:none">
+            <h3><span id="reportTitle">Report</span></h3>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="Search by date..." oninput="filterTable()">
+            </div>
+            <div class="m">
+                <div class="mc">
+                    <div class="mv" id="totalMilk">0</div>
+                    <div class="ml"><span id="totalMilkLabel">Total Milk (L)</span></div>
+                </div>
+                <div class="mc">
+                    <div class="mv" id="totalRevenue">₹0</div>
+                    <div class="ml"><span id="totalRevenueLabel">Revenue</span></div>
+                </div>
+                <div class="mc">
+                    <div class="mv" id="totalCost">₹0</div>
+                    <div class="ml"><span id="totalCostLabel">Cost</span></div>
+                </div>
+                <div class="mc">
+                    <div class="mv" id="netProfit">₹0</div>
+                    <div class="ml"><span id="netProfitLabel">Net Profit</span></div>
+                </div>
+            </div>
+            <div class="cc">
+                <h4><span id="dailyChartTitle">Daily Chart</span></h4>
+                <div class="bc" id="chart"></div>
+            </div>
+            <div class="cc">
+                <h4><span id="dataTableTitle">Data Table</span></h4>
+                <div style="overflow-x:auto">
+                    <table class="t">
+                        <thead>
+                            <tr>
+                                <th><span id="dateColumn">Date</span></th>
+                                <th><span id="morningColumn">Morning</span></th>
+                                <th><span id="eveningColumn">Evening</span></th>
+                                <th><span id="totalColumn">Total</span></th>
+                                <th><span id="revenueColumn">Revenue</span></th>
+                                <th><span id="healthColumn">Health</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <button class="btn b3" onclick="download()"><span id="downloadCSVButton">CSV</span></button>
+            <button class="btn b3" onclick="downloadPDF()"><span id="downloadPDFButton">PDF</span></button>
+        </div>
+        <div id="multi" class="card" style="display:none">
+            <h3><span id="multiPeriodTitle">Multi-Period</span></h3>
+            <div class="r">
+                <div>
+                    <label><span id="periodLabel">Period:</span></label>
+                    <select id="period" onchange="updateMulti()">
+                        <option value="weekly"><span id="weeklyOption">Weekly</span></option>
+                        <option value="monthly"><span id="monthlyOption">Monthly</span></option>
+                        <option value="quarterly"><span id="quarterlyOption">Quarterly</span></option>
+                    </select>
+                </div>
+            </div>
+            <div class="m" id="multiMetrics"></div>
+            <div class="cc">
+                <h4><span id="periodChartTitle">Period Chart</span></h4>
+                <div class="bc" id="multiChart"></div>
+            </div>
+            <div class="cc">
+                <h4><span id="periodDataTitle">Period Data</span></h4>
+                <div style="overflow-x:auto">
+                    <table class="t">
+                        <thead>
+                            <tr>
+                                <th><span id="periodColumn">Period</span></th>
+                                <th><span id="milkColumn">Milk</span></th>
+                                <th><span id="revenueColumn2">Revenue</span></th>
+                                <th><span id="costColumn">Cost</span></th>
+                                <th><span id="profitColumn">Profit</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="multiBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <button class="btn b3" onclick="downloadMulti()"><span id="downloadMultiCSVButton">CSV</span></button>
+            <button class="btn b3" onclick="downloadMultiPDF()"><span id="downloadMultiPDFButton">PDF</span></button>
+        </div>
+        <div id="alerts"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
